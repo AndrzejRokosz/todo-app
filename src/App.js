@@ -3,7 +3,7 @@ import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton';
 import { List, ListItem } from 'material-ui/List';
 
-const API_URL='https://moj-firebase.firebaseio.com'
+const API_URL = 'https://moj-firebase.firebaseio.com'
 
 
 class App extends Component {
@@ -16,15 +16,19 @@ class App extends Component {
   }
   handleClick = (event) => {///add to database
     if (this.state.taskName !== '') {
-      let tasks = this.state.tasks;
-      const newTask = { taskName: this.state.taskName, completed: false }
+      let tasks = this.state.tasks
+      let newTask = { taskName: this.state.taskName, completed: false }
       fetch(`${API_URL}/tasks.json`, {
         method: 'POST',
         body: JSON.stringify(newTask)
-      }).then(() => {
-        tasks.push(newTask)
-        this.setState({ tasks, taskName: '' })
       })
+        .then(response => response.json())
+        .then((data) => {
+          newTask.id = data.name
+          tasks.push(newTask)
+          // tasks.push(newTask)
+          this.setState({ tasks, taskName: '' })
+        })
 
     }
   }
@@ -32,15 +36,26 @@ class App extends Component {
 
   componentWillMount = () => {  //// read from database
     fetch(`${API_URL}/tasks.json`)
-    .then(response=>response.json())
-    .then(data=>{
-      const array=Object.entries(data)//zamiana na tablice
-      const taskList=array.map(task=>task[1])
-      this.setState({tasks:taskList})
-      console.log('data',taskList)
-    })
+      .then(response => response.json())
+      .then(data => {
+        const array = Object.entries(data)//zamiana na tablice index=1 klucz=0
+        const taskList = array.map(([id, values]) => {
+          values.id = id //nowa wlasciwosc w obiekcie zadania
+          return values
+        })
+        this.setState({tasks:taskList})
+        console.log('data', taskList)
+      })
 
   }
+
+  handleKeyDown=event=>{ /// add task on enter hit 
+    console.log(event.keyDown)
+    if(event.keyCode===13){
+      this.handleClick()
+    }
+  }
+
   render() {
     return (
       <div className="App">
@@ -48,9 +63,11 @@ class App extends Component {
         <div>
           <TextField
             onChange={this.handleChange}
+            onKeyDown={this.handleKeyDown}
             value={this.state.taskName}
             fullWidth={true}
-            hintText="Enter your task here" />
+            floatingLabelText="Enter your task here"
+            />
 
           <RaisedButton
             label="Add"
@@ -61,8 +78,10 @@ class App extends Component {
         </div>
 
         <List>
-          {this.state.tasks.map((task, index) => (
-            <ListItem>{task.taskName}</ListItem>
+          {this.state.tasks.map(task => (
+            <ListItem
+              key={task.id}
+            >{task.taskName}</ListItem>
           ))}
         </List>
 
