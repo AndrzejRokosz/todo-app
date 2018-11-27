@@ -17,20 +17,30 @@ class App extends Component {
   handleClick = (event) => {
     if (this.state.taskName !== '') {
       let tasks = this.state.tasks;
-      tasks.push({ taskName: this.state.taskName, completed: false });
-      this.setState({ tasks, taskName: '' })
+      const newTask={taskName:this.state.taskName,completed:false}
+      fetch('https://moj-firebase.firebaseio.com/tasks.json',{
+        method:'POST',
+        body:JSON.stringify(newTask)
+      }).then(()=>{
+        tasks.push(newTask)
+        this.setState({tasks,taskName:''})
+      })
     }
   }
+  componentDidMount = () => {
 
+  }
   render() {
     return (
       <div className="App">
+
         <div>
           <TextField
             onChange={this.handleChange}
             value={this.state.taskName}
             fullWidth={true}
             hintText="Enter your task here" />
+
           <RaisedButton
             label="Add"
             primary={true}
@@ -38,10 +48,10 @@ class App extends Component {
             onClick={this.handleClick}
           />
         </div>
-        <List>
 
+        <List>
           {this.state.tasks.map((task, index) => (
-            <div>{task.taskName}</div>
+            <ListItem>{task.taskName}</ListItem>
           ))}
         </List>
 
