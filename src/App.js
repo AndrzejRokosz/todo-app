@@ -4,6 +4,7 @@ import RaisedButton from 'material-ui/RaisedButton';
 import { List, ListItem } from 'material-ui/List';
 import Checkbox from 'material-ui/Checkbox';
 import DeleteIcon from 'material-ui/svg-icons/action/delete';
+import IconButton from 'material-ui/IconButton';
 
 const API_URL = 'https://moj-firebase.firebaseio.com'
 
@@ -17,7 +18,7 @@ class App extends Component {
     this.setState({ taskName: event.target.value })
   }
 
-  addTask=()=>{
+  addTask = () => {
     if (this.state.taskName !== '') {
       let tasks = this.state.tasks
       let newTask = { taskName: this.state.taskName, completed: false }
@@ -35,18 +36,17 @@ class App extends Component {
     }
   }
 
-
-
   handleClick = () => {///add to database
     this.addTask()
   }
 
-
-  componentWillMount = () => {  //// read from database
+  loadData = () => {
     fetch(`${API_URL}/tasks.json`)
       .then(response => response.json())
       .then(data => {
-        if(!data){ ////zabezpieczenie w przypadku pustej bazy danych
+        if (!data) {
+          this.setState({ tasks: [] })
+          ////zabezpieczenie w przypadku pustej bazy danych
           return
         }
         const array = Object.entries(data)//zamiana na tablice index=1 klucz=0
@@ -54,17 +54,48 @@ class App extends Component {
           values.id = id //nowa wlasciwosc w obiekcie zadania
           return values
         })
-        this.setState({tasks:taskList})
+        this.setState({ tasks: taskList })
         console.log('data', taskList)
       })
-
   }
 
-  handleKeyDown=event=>{ /// add task on enter hit 
+  componentWillMount = () => {  //// read from database
+    this.loadData()
+  }
+
+  handleKeyDown = event => { /// add task on enter hit 
     console.log(event.keyDown)
-    if(event.keyCode===13){
+    if (event.keyCode === 13) {
       this.addTask()
     }
+  }
+
+  handleDelete = (id) => {
+    fetch(`${API_URL}/tasks/${id}.json`, {
+      method: 'DELETE'
+    })
+      .then(() => {
+        this.loadData()
+      })
+  }
+  handleCheck = (task) => {
+    // task.completed = !task.completed
+    // fetch(`${API_URL}/tasks/${task.id}.json`, {
+    //   method: 'PUT',
+    //   body: JSON.stringify(task)
+    // })
+
+    task.completed = !task.completed
+    fetch(`${API_URL}/tasks/${task.id}.json`, {
+      method: 'PATCH',
+      body: JSON.stringify(task)
+    })
+    .then(() => {
+      this.loadData()
+    })
+
+
+
   }
 
   render() {
@@ -78,7 +109,7 @@ class App extends Component {
             value={this.state.taskName}
             fullWidth={true}
             floatingLabelText="Enter your task here"
-            />
+          />
 
           <RaisedButton
             label="Add"
@@ -93,8 +124,16 @@ class App extends Component {
             <ListItem
               key={task.id}
               primaryText={task.taskName}
-              leftCheckbox={<Checkbox/>}
-              rightIcon={<DeleteIcon/>}
+              leftCheckbox={
+              <Checkbox
+                defaultChecked={task.completed}
+                 onCheck={() => this.handleCheck(task)}
+                  />}
+              rightIconButton={
+                <IconButton>
+                  <DeleteIcon onClick={() => this.handleDelete(task.id)} />
+                </IconButton>
+              }
             />
           ))}
         </List>
