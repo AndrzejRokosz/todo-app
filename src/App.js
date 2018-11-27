@@ -34,7 +34,10 @@ class App extends Component {
     fetch(`${API_URL}/tasks.json`)
     .then(response=>response.json())
     .then(data=>{
-      console.log('data',data)
+      const array=Object.entries(data)//zamiana na tablice
+      const taskList=array.map(task=>task[1])
+      this.setState({tasks:taskList})
+      console.log('data',taskList)
     })
 
   }
