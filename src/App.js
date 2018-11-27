@@ -3,31 +3,39 @@ import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton';
 import { List, ListItem } from 'material-ui/List';
 
+const API_URL='https://moj-firebase.firebaseio.com'
+
+
 class App extends Component {
   state = {
-    tasks: [
-      { taskName: 'odkurzanie', completed: false },
-      { taskName: 'gotowanie', completed: false }
-    ],
+    tasks: [],
     taskName: ''//searched taskName
   }
   handleChange = (event) => {
     this.setState({ taskName: event.target.value })
   }
-  handleClick = (event) => {
+  handleClick = (event) => {///add to database
     if (this.state.taskName !== '') {
       let tasks = this.state.tasks;
-      const newTask={taskName:this.state.taskName,completed:false}
-      fetch('https://moj-firebase.firebaseio.com/tasks.json',{
-        method:'POST',
-        body:JSON.stringify(newTask)
-      }).then(()=>{
+      const newTask = { taskName: this.state.taskName, completed: false }
+      fetch(`${API_URL}/tasks.json`, {
+        method: 'POST',
+        body: JSON.stringify(newTask)
+      }).then(() => {
         tasks.push(newTask)
-        this.setState({tasks,taskName:''})
+        this.setState({ tasks, taskName: '' })
       })
+
     }
   }
-  componentDidMount = () => {
+
+
+  componentWillMount = () => {  //// read from database
+    fetch(`${API_URL}/tasks.json`)
+    .then(response=>response.json())
+    .then(data=>{
+      console.log('data',data)
+    })
 
   }
   render() {
