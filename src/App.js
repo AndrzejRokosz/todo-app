@@ -2,6 +2,8 @@ import React, { Component } from 'react'
 import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton';
 import { List, ListItem } from 'material-ui/List';
+import Checkbox from 'material-ui/Checkbox';
+import DeleteIcon from 'material-ui/svg-icons/action/delete';
 
 const API_URL = 'https://moj-firebase.firebaseio.com'
 
@@ -14,7 +16,8 @@ class App extends Component {
   handleChange = (event) => {
     this.setState({ taskName: event.target.value })
   }
-  handleClick = (event) => {///add to database
+
+  addTask=()=>{
     if (this.state.taskName !== '') {
       let tasks = this.state.tasks
       let newTask = { taskName: this.state.taskName, completed: false }
@@ -26,7 +29,6 @@ class App extends Component {
         .then((data) => {
           newTask.id = data.name
           tasks.push(newTask)
-          // tasks.push(newTask)
           this.setState({ tasks, taskName: '' })
         })
 
@@ -34,10 +36,19 @@ class App extends Component {
   }
 
 
+
+  handleClick = () => {///add to database
+    this.addTask()
+  }
+
+
   componentWillMount = () => {  //// read from database
     fetch(`${API_URL}/tasks.json`)
       .then(response => response.json())
       .then(data => {
+        if(!data){ ////zabezpieczenie w przypadku pustej bazy danych
+          return
+        }
         const array = Object.entries(data)//zamiana na tablice index=1 klucz=0
         const taskList = array.map(([id, values]) => {
           values.id = id //nowa wlasciwosc w obiekcie zadania
@@ -52,7 +63,7 @@ class App extends Component {
   handleKeyDown=event=>{ /// add task on enter hit 
     console.log(event.keyDown)
     if(event.keyCode===13){
-      this.handleClick()
+      this.addTask()
     }
   }
 
@@ -81,7 +92,10 @@ class App extends Component {
           {this.state.tasks.map(task => (
             <ListItem
               key={task.id}
-            >{task.taskName}</ListItem>
+              primaryText={task.taskName}
+              leftCheckbox={<Checkbox/>}
+              rightIcon={<DeleteIcon/>}
+            />
           ))}
         </List>
 
